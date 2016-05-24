@@ -33,6 +33,31 @@ def prepared_statement(phone_input)
 
     #### END ####
 
+    return result.first
+
+end
+
+
+
+# stored procedure
+
+def stored_procedure(phone_input)
+
+    ### START ###
+
+    require 'Mysql2'
+
+    # connect to the database
+    client = Mysql2::Client.new(:host => 'localhost', :username => 'root')
+    client.select_db('bakery')
+
+    # execute the procedure as a query
+    result = client.query("CALL get_customer_from_phone(#{phone_input})")
+
+    #### END ####
+
+    return result.first
+
 end
 
 
@@ -135,8 +160,21 @@ print_test(dynamic_query(malicious_input) == "SELECT * FROM customers WHERE phon
 
 puts "\nbuilds prepared statement..."
 
-# prepared_statement(clean_input)
-puts "\t-"
+print_test(prepared_statement(clean_input)['customer_id'] == 24)
+print_test(prepared_statement(malicious_input) == nil)
+
+
+puts "\ncalls stored procedure..."
+
+print_test(stored_procedure(clean_input)['customer_id'] == 24)
+begin
+    stored_procedure(malicious_input)
+rescue Mysql2::Error
+    print_test(true)
+else
+    print_test(false)
+end
+
 
 puts "\nvalidates phones..."
 
