@@ -35,6 +35,29 @@ def prepared_statement(phone_input):
     return cursor.fetchone()
 
 
+
+# stored procedure
+
+def stored_procedure(phone_input):
+
+    ### START ###
+
+    import mysql.connector
+
+    # connect to the database and instantiate a cursor
+    cnx = mysql.connector.connect(database='bakery')
+    cursor = cnx.cursor()
+
+    # execute the procedure with a list of args holding a value for each parameter
+    cursor.callproc('get_customer_from_phone', args=(phone_input,))
+
+    #### END ####
+
+    for result in cursor.stored_results():
+        return result.fetchone()
+
+
+
 # phone validation
 
 ### START ###
@@ -128,6 +151,12 @@ print '\nbuilds prepared statement...'
 
 print_test(prepared_statement(clean_input)[0] == 24)
 print_test(prepared_statement(malicious_input) == None)
+
+
+print '\ncalls stored procedure...'
+
+print_test(stored_procedure(clean_input)[0] == 24)
+print_test(stored_procedure(malicious_input) == None)
 
 
 print '\nvalidates phones...'
