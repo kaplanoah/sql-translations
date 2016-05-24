@@ -16,7 +16,7 @@ function dynamicQuery(phoneInput) {
 
 // prepared statement
 
-function preparedStatement(phoneInput) {
+function preparedStatement(phoneInput, callback) {
 
     /// START ///
 
@@ -24,13 +24,16 @@ function preparedStatement(phoneInput) {
     var mysql = require('mysql2');
 
     // connect to the database
-    var connection = mysql.createConnection({user: 'test', database: 'bakery'});
+    var connection = mysql.createConnection({user: 'root@localhost', database: 'bakery'});
 
-    var statement = 'SELECT * FROM customer WHERE phone = ?';
+    var statement = 'SELECT * FROM customers WHERE phone = ?';
 
     // execute the statement with an array holding a value for each parameter
     connection.execute(statement, [phoneInput], function(err, rows) {
 
+        // DELETE
+        callback(rows[0]);
+        connection.end();
     });
 
     //// END ////
@@ -132,13 +135,35 @@ function printTest(condition) {
 console.log('\nbuilds dynamic queries...');
 
 printTest(dynamicQuery(cleanInput) === "SELECT * FROM customers WHERE phone = '8015550198';");
-printTest(dynamicQuery(maliciousInput) == "SELECT * FROM customers WHERE phone = '1' OR 1=1;--';");
+printTest(dynamicQuery(maliciousInput) === "SELECT * FROM customers WHERE phone = '1' OR 1=1;--';");
 
 
-console.log('\nbuilds prepared statement...');
+// prepared statement
 
-// prepared_statement(cleanInput)
-console.log('\t-');
+function cleanTest(callback) {
+    preparedStatement(cleanInput, function(result) {
+        callback(result.customer_id, testPreparedStatement);
+    });
+}
+
+function maliciousTest(cleanOutput, callback) {
+    preparedStatement(maliciousInput, function(result) {
+        callback(cleanOutput, result);
+    });
+}
+
+function testPreparedStatement(cleanOutput, malicousOutput) {
+
+    console.log('\nbuilds prepared statement...');
+
+    printTest(cleanOutput === 24);
+    printTest(malicousOutput === undefined);
+
+    done();
+}
+
+cleanTest(maliciousTest);
+
 
 console.log('\nvalidates phones...');
 
@@ -182,7 +207,9 @@ var queryWithTrimmedString = dynamicQuery(escapedString.slice(1, escapedString.l
 printTest(queryWithTrimmedString === escapedStringResult);
 
 
-console.log('\ndone!\n\n');
+function done() {
+    console.log('\ndone!\n');
+}
 
 
 
