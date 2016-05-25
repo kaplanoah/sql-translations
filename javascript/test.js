@@ -41,6 +41,32 @@ function preparedStatement(phoneInput, callback) {
 
 
 
+// stored procedure
+
+function storedProcedure(phoneInput) {
+
+    /// START ///
+
+    // mysql client for node.js (node-mysql2)
+    var mysql = require('mysql');
+
+    // connect to the database
+    var connection = mysql.createConnection({
+        user: 'root@localhost',
+        database: 'bakery',
+        multipleStatements: true,
+    });
+
+    // execute the procedure
+    connection.query("SET @phone_input = '" + phoneInput +  "'; CALL get_customer_from_phone(@phone_input);");
+
+    //// END ////
+
+    connection.end();
+}
+
+
+
 // phone validation
 
 /// START ///
@@ -163,6 +189,11 @@ function testPreparedStatement(cleanOutput, malicousOutput) {
 }
 
 cleanTest(maliciousTest);
+
+
+console.log('\ncalls stored procedure...');
+
+console.log(storedProcedure(cleanInput));
 
 
 console.log('\nvalidates phones...');
